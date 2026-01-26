@@ -1,39 +1,39 @@
-"""Test Heber Light & Power's convert and indexing programs."""
+"""Test Heber Light & Power's convert of their RAW text to FM TSV."""
 
 
 import os
 from shutil import copyfile
-import app_modules.utilities as utils
+import src.app_modules.utilities as utils
 
 
 # Prepare for testing
 DATA = utils.FILE_PATH
-FNAME = '_hlap Aug 2023 cycle 2'
-NEW_FILE = f'{DATA}{FNAME[:1]}.pdf'
-copyfile(f'{DATA}/archive/{FNAME}.pdf', NEW_FILE)
+FNAME = '_hlap Jan 25 CYCLE 2.TXT'
+NEW_FILE = FNAME[1:]
+copyfile(f'{DATA}/archive/{FNAME}', f'{DATA}{NEW_FILE}')
 
 
-def test_hlap_cnvt(fname=f'{FNAME[1:]}.txt'):
+def test_hlap_cnvt(fname=NEW_FILE):
     """Test conversion program."""
-    assert os.system(f'py src/transforms/hlap_cnvrt.py -f "{fname}"') == 0
+    command = f'py src/transforms/hlap_cnvrt.py -f "{fname}"'
+    utils.logger.info('Calling: %s', command)
+    assert os.system(command) == 0
 
 
 def test_hlap_cnvt_log():
     """Intergate log to see if conversion was successful."""
     lines = utils.get_last_log_segment()
-    assert 'Not printed: 0' in lines[-1]
+    assert 'Printed: 250' in lines[-2]
 
 
 def test_cleanup():
-    """Archive results to keep test data directory clean."""
-    if old_files := [
+    """Remove results to keep test data directory clean."""
+    if test_files := [
             x for x in os.listdir(DATA)
-            if x.startswith(f'fxd {FNAME}') and not x.endswith('.zip')]:
-        utils.archive_files(old_files, DATA)
-    if old_files := [
-            x for x in os.listdir(DATA)
-            if x.startswith('B47001') and not x.endswith('.zip')]:
-        utils.archive_files(old_files, DATA)
+            if x.startswith('fxd') and not x.endswith('.zip')]:
+        for test_file in test_files:
+            os.remove(f'{DATA}{test_file}')
+    os.remove(f'{DATA}{NEW_FILE}')
 
 
 if __name__ == '__main__':

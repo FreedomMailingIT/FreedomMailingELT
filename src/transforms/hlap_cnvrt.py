@@ -9,8 +9,8 @@ statements see hlp_pdf_idx).  Both options used each job run.
 
 import csv
 import os
-from transforms.client_transforms.ancillaries.hlap_account import Account
-import app_modules.utilities as utils
+from src.transforms.client_transforms.ancillaries.hlap_account import Account
+import src.app_modules.utilities as utils
 
 
 DEBUG = False
@@ -70,7 +70,7 @@ def transform_data(dest_file, src_file, print_all):
 
 if __name__ == '__main__':
     CITY_NAME, FILE_NAME, FILE_TYPE, NEW_FNAME, FILE_PATH = utils.parse_user_input()
-    print(f'{CITY_NAME=}, {FILE_NAME=}, {FILE_TYPE=}, {NEW_FNAME=}, {FILE_PATH=}'); exit()
+    # print(f'{CITY_NAME=}, {FILE_NAME=}, {FILE_TYPE=}, {NEW_FNAME=}, {FILE_PATH=}'); exit()
 
     IN_FILE_NAME = f'{FILE_PATH}{NEW_FNAME}'
     OUT_FILE_NAME = f'{FILE_PATH}{utils.TRANS_PREFIX}{NEW_FNAME}'
