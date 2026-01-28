@@ -16,9 +16,9 @@ def transform_data(csv_writer, source_text):
     count = 0
     for row in csv_reader:
         if row and row[0] != 'HDR':  # bypass empty line and header
-            count += 1
             if (row[0] == 'BILL' and record.len() > 99) or row[0] == 'TLR':
                 csv_writer.writerow(record.get())
+                count += 1
                 record.reset()
             if row[0] != 'TLR':
                 record.build(row)
