@@ -20,7 +20,6 @@ utils.initialize_log_file(path=utils.FILE_PATH)  # FILE_PATH needed because util
 def test_hlap_idx(fname=NEW_FILE):
     """Test PDF indexing program."""
     command = f'py src/pdf_bill_indexing/hlap_pdf_idx.py -f "{fname}"'
-    utils.logger.info('About to execute: %s', command)
     assert os.system(command) == 0
 
 
