@@ -39,7 +39,7 @@ missing_tests = [
 def test_sorting(fname, msg, line, subtests):
     """Test sorts."""
     with subtests.test(fname):
-        assert os.system(f'py dupes_sorting/sort_multiples.py -f "{TEST_DATA}{fname}"') == 0
+        assert os.system(f'py src/dupes_sorting/sort_multiples.py -f "{TEST_DATA}{fname}"') == 0
 
     _, seg_lines = utils.trim_log_seg(utils.get_last_log_segment())
 
@@ -51,7 +51,7 @@ def test_sorting(fname, msg, line, subtests):
 def test_missing_data(fname, msg, line, subtests):
     """Test sorts."""
     with subtests.test(fname):
-        assert os.system(f'py dupes_sorting/sort_multiples.py -f "{TEST_DATA}{fname}"') != 0
+        assert os.system(f'py src/dupes_sorting/sort_multiples.py -f "{TEST_DATA}{fname}"') != 0
 
     _, seg_lines = utils.trim_log_seg(utils.get_last_log_segment())
 
