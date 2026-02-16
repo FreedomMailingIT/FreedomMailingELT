@@ -32,6 +32,7 @@ transforms = [
     'lake_point.zip',
     'roosevelt.zip',
     'waterford.zip',
+    'discovery_bay.zip'
     ]
 
 @pytest.mark.parametrize('fname', transforms)
