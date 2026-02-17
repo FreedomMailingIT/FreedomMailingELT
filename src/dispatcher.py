@@ -43,14 +43,14 @@ def dispatch_file(filename: str):
         # if so, skip this process, program will delete old file below
         # detect the creation of the new file and process it
         if cname == 'hlap':
-            program = ('src/pdf_bill_indexing/hlap_pdf_idx'
+            program = ('pdf_bill_indexing/hlap_pdf_idx'
                         if ftype == 'pdf'
-                        else 'src/transforms/hlap_cnvrt')
+                        else 'transforms/hlap_cnvrt')
         elif 'dupes' in fname.lower():
-            program = 'src/dupes_sorting/sort_multiples'
+            program = 'dupes_sorting/sort_multiples'
         else:  # try processing as specialized transform
-            program = 'src/transforms/transform_file'
-        command = f'py {program}.py -n {cname} -t {ftype} -f "{fname}" -p "{WATCH_ME}"'
+            program = 'transforms/transform_file'
+        command = f'python ./src/{program}.py -n {cname} -t {ftype} -f "{fname}" -p "{WATCH_ME}"'
         utils.logger.info('Invoking: %s', command)
         prob = os.system(command)
     else:
@@ -66,9 +66,9 @@ def dispatch_file(filename: str):
         prob = False
 
     with contextlib.suppress(FileNotFoundError):
-        if os.path.exists(fname):
+        if os.path.exists(f'{WATCH_ME}{fname}'):
             if not prob:
-                # leave file behind if there is a problem
+                # remove the file if processed successfully
                 utils.logger.info('Deleting "%s" to cleanup.', fname)
                 os.remove(f'{WATCH_ME}{fname}')
             else:

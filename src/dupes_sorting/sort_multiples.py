@@ -83,6 +83,7 @@ def prepare_input(abs_fn, city_params):
     except ValueError:
         col1, col2, col3 = city_params
 
+    utils.logger.info('Sorting %s using %s parameters', abs_fn, city_params)
     with open(abs_fn, 'r', encoding=utils.get_file_encode(abs_fn)) as ifile:
         delim = get_delimeter(ifile)
         lines = csv.reader(ifile, delimiter=delim)
@@ -242,7 +243,7 @@ def main(file2sort, city_name):
             blank_lines += 1
     groups[get_key_value(count)] = group
     sort_and_output(groups, file2sort, city_params[3], delim, blank_lines)
-    return 0
+    return 1
 
 
 if __name__ == '__main__':
