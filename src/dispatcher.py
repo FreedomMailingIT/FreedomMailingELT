@@ -2,10 +2,10 @@
 Program dispatches given file to the appropriate program module.
 
 I this program given a filename with an -f argument it processes the given file.
-If program called without a filename it monitors the given file directory and 
+If program called without a filename it monitors the given file directory and
 respond to files created in that directory.
 
-If called with -d aurgument the given directory will be monitored, otherwise the 
+If called with -d aurgument the given directory will be monitored, otherwise the
 the default utils.FILE_PATH directory will be monitored.
 
 
@@ -43,13 +43,13 @@ def dispatch_file(filename: str):
         # if so, skip this process, program will delete old file below
         # detect the creation of the new file and process it
         if cname == 'hlap':
-            program = ('pdf_bill_indexing/hlap_pdf_idx'
+            program = ('src/pdf_bill_indexing/hlap_pdf_idx'
                         if ftype == 'pdf'
                         else 'transforms/hlap_cnvrt')
         elif 'dupes' in fname.lower():
-            program = 'dupes_sorting/sort_multiples'
+            program = 'src/dupes_sorting/sort_multiples'
         else:  # try processing as specialized transform
-            program = 'transforms/transform_file'
+            program = 'src/transforms/transform_file'
         prob = os.system(f'\
             py {program}.py \
             -n {cname} \
