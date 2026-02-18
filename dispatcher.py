@@ -51,7 +51,7 @@ def dispatch_file(filename: str):
         else:  # try processing as specialized transform
             program = 'transforms/transform_file'
         command = f'python ./src/{program}.py -n {cname} -t {ftype} -f "{fname}" -p "{WATCH_ME}"'
-        utils.logger.info('Invoking: %s', command)
+        utils.logger.debug('Invoking: %s', command)
         prob = os.system(command)
     else:
         # rename file for easier processing later
