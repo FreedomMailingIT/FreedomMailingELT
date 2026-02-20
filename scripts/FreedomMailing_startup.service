@@ -9,8 +9,7 @@ User=operations
 Group=operations
 WorkingDirectory=/home/operations/FreedomMailingETL
 Environment="HOME=/home/operations"
-Environment="PATH=/home/operations/.local/bin/uv"
-# Environment="PATH=/home/operations/FreedomMailingETL/.env/bin:/usr/bin:/bin"
+Environment="PATH=/home/operations/.local/bin/uv:/home/operations/FreedomMailingETL/.env/bin:/usr/bin:/bin"
 Environment="PYTHONPATH=.:src"
 ExecStart=/home/operations/FreedomMailingETL/scripts/system_start.sh
 Restart=on-failure
