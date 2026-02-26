@@ -3,6 +3,7 @@
 
 import decimal as dec  # noqa
 import csv
+from pathlib import Path
 from app_modules import utilities as utils
 
 
@@ -36,8 +37,9 @@ def test_col_letter_to_number():
 
 def test_row_col_read():
     """Test the right column is being extracted."""
-    with open(f'{utils.TEST_DATA}many_columns.txt', encoding='utf8') as test_data:
-        csv_reader = csv.reader(test_data, delimiter='\t')
+    test_file = Path(utils.TEST_DATA) / "archive" / "many_columns.txt"
+    with open(test_file, encoding="utf8") as test_data:
+        csv_reader = csv.reader(test_data, delimiter="\t")
         for row in csv_reader:
             assert row[utils.convert_col_letter_to_number('ED')] == ''
             assert row[utils.convert_col_letter_to_number('EE')] == 'PO BOX 1478'
