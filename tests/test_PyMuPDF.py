@@ -9,9 +9,8 @@ import pymupdf
 
 # Prepare for testing
 DATA = 'tests/data/'
-FNAME = '_hlap Aug 2023 cycle 2'
-NEW_FILE = f'{DATA}{FNAME[1:]}.pdf'
-copyfile(f'{DATA}archive/{FNAME}.pdf', NEW_FILE)
+FNAME = 'hlap Aug 2023 cycle 2'
+copyfile(f'{DATA}archive/{FNAME}.pdf', FNAME)
 
 
 def test_page_count():
@@ -21,7 +20,7 @@ def test_page_count():
         if file.match('B47001*.*'):
             os.remove(file)
 
-    with pymupdf.open(NEW_FILE) as pdf:
+    with pymupdf.open(FNAME) as pdf:
         num = 0
         for num, page in enumerate(pdf):
             text = page.get_text()
