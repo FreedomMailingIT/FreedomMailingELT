@@ -8,7 +8,7 @@ Switched to PyMuPDF (import as fitz) because os independent Python package
 that is ~20 faster that PyPDF4.
 """
 
-import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -46,10 +46,9 @@ def create_index(new_abs_fn_prefix):
                 first_acc = first_acc or acc_no
                 idxf.write(out_line.format(acc_no, sp=idx_no, ep=idx_no))
         page_no = page_no + 1
-    if Path(spdfi_file).exists():
-        utils.logger.info('Found %s exists; removing', spdfi_file)
-        os.remove(spdfi_file)
-    os.rename(tmp_file, spdfi_file)
+    idx_file = Path(spdfi_file)
+    Path(tmp_file).replace(idx_file)
+    utils.logger.info('Created index file %s', idx_file.name)
     checkout_idx(spdfi_file, page_no, first_acc, acc_no)
 
 
@@ -67,8 +66,12 @@ def checkout_idx(spdfi_file, page_no, first_acc, acc_no):
 
 def put_files_to_sftp(fn_prefix):
     """Copy required files to SFTP server."""
-    cmd = f"sshpass -p {c.pswd} scp {fn_prefix}* {c.user}@{c.host}:~"
-    err = os.system(cmd)
+    cmd = [
+        'sshpass', '-p', c.pswd,
+        'scp', fn_prefix+'*',
+        c.user+'@'+c.host+':~'
+    ]
+    err = subprocess.run(cmd, check=False)
     if err:
         utils.logger.info('Problems coping B47001* files to SFTP server.')
     else:
@@ -85,21 +88,14 @@ def main(input_fp, input_fn=None):
     (always the same) also output
     eg 0123456789,10,10
     """
-    file_path = input_fp
+    file_path = Path(input_fp)
     filename = utils.compose_hlap_filename()
-    new_abs_fn_prefix = f'{file_path}{filename}'
+    new_abs_fn_prefix = file_path / filename
     if input_fn != filename:
-        old_fn = f'{file_path}{input_fn}'
-        new_fn = f'{new_abs_fn_prefix}.pdf'
-        msg = [
-            'Renaming', '"'+old_fn.rsplit('/', maxsplit=1)[-1]+'"',
-            'to', '"'+new_fn.rsplit('/', maxsplit=1)[-1]+'"'
-            ]
-        utils.logger.info(' '.join(msg))
-        if Path(new_fn).exists():
-            utils.logger.info('Found %s exists; removing', new_fn)
-            os.remove(new_fn)
-        os.rename(old_fn, new_fn)
+        old_fn = file_path / input_fn
+        new_fn = new_abs_fn_prefix.with_suffix(".pdf")
+        utils.logger.info('Renaming "%s" to "%s"', old_fn.name, new_fn.name)
+        old_fn.replace(new_fn)
     create_index(new_abs_fn_prefix)
     if 'test' not in input_fp:
         # no FTP if testing
