@@ -1,6 +1,10 @@
 """Test transform programs.
 
 Should test all transforms because they are all unique.
+
+Each transform ZIP file is copied into the test directory, processed,
+and validated through log inspection. Cleanup removes temporary files
+and archives fixed output files.
 """
 
 from pathlib import Path
@@ -37,7 +41,14 @@ transforms = [
 
 @pytest.mark.parametrize('fname', transforms)
 def test_transform(fname, subtests):
-    """Test transform."""
+    """Run a transform and validate its log output.
+
+    Steps:
+    - Copy the ZIP file into the test directory
+    - Execute the transform logic
+    - Inspect the last log segment
+    - Validate conversion, CSV creation, non-empty output, and compression
+    """
     with subtests.test(msg=f'{fname} failed to execute!'):
         src = TEST_DATA / "transform_data" / fname
         dst = TEST_DATA / fname
@@ -67,8 +78,11 @@ def test_transform(fname, subtests):
 
 
 def test_cleanup():
-    """Keep test TEST_DATA directory clean."""
-    # archive fixed files for examining results, if needed
+    """Keep test TEST_DATA directory clean.
+
+    Delete temporary files and archiving fixed files for examination of results,
+    if needed.
+    """
     old_files = [x for x in TEST_DATA.iterdir() if x.name.startswith('fxd ')]
     if old_files:
         utils.logger.debug('*' * 80)
