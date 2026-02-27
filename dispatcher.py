@@ -15,10 +15,12 @@ http://brunorocha.org/python/watching-a-directory-for-file-changes-with-python.h
 
 
 import argparse
+import contextlib
 import os
+from pathlib import Path
+import subprocess
 import sys
 import time
-import contextlib
 
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
@@ -29,56 +31,7 @@ import app_modules.utilities as utils
 WATCH_ME = utils.FILE_PATH
 
 
-def dispatch_file(filename: str):
-    """Dispatch the file to the appropriate program module."""
-    cname, fname, ftype, nname, _ = utils.parse_filename_new(filename)
-    utils.logger.info('*' * 80)
-    utils.logger.info('Processing file "%s"', fname)
-    prep = 'an' if cname[0] in ('a', 'e', 'i', 'o', 'u') else 'a'
-    utils.logger.info(
-        'IDed as %s "%s" file of type "%s"',
-        prep, cname, ftype)
-    if fname == nname:
-        # parse_filename may have created new file with corrected name
-        # if so, skip this process, program will delete old file below
-        # detect the creation of the new file and process it
-        if cname == 'hlap':
-            program = ('pdf_bill_indexing/hlap_pdf_idx'
-                        if ftype == 'pdf'
-                        else 'transforms/hlap_cnvrt')
-        elif 'dupes' in fname.lower():
-            program = 'dupes_sorting/sort_multiples'
-        else:  # try processing as specialized transform
-            program = 'transforms/transform_file'
-        command = f'python ./src/{program}.py -n {cname} -t {ftype} -f "{fname}" -p "{WATCH_ME}"'
-        utils.logger.debug('Invoking: %s', command)
-        prob = os.system(command)
-    else:
-        # rename file for easier processing later
-        time.sleep(5)  # give time to release file
-        try:
-            utils.logger.info('Renaming "%s" to "%s" in "%s"', fname, nname, WATCH_ME)
-            os.rename(f'{WATCH_ME}{fname}', f'{WATCH_ME}{nname}')
-        except PermissionError:
-            utils.logger.info('Error renaming "%s" to "%s" in "%s"', fname, nname, WATCH_ME)
-            utils.logger.info('%s', sys.exc_info())
-            prob = True
-        prob = False
-
-    with contextlib.suppress(FileNotFoundError):
-        if os.path.exists(f'{WATCH_ME}{fname}'):
-            if not prob:
-                # remove the file if processed successfully
-                utils.logger.info('Deleting "%s" to cleanup.', fname)
-                os.remove(f'{WATCH_ME}{fname}')
-            else:
-                # archive the source file if there is a problem
-                utils.logger.info('Archiving "%s" for analysis.', fname)
-                os.rename(
-                    f"{WATCH_ME}{fname}",
-                    f"{'/'.join(WATCH_ME.split('/')[:-2])}/archive/{fname}"
-                    )
-
+#-----------------Setup------------------
 
 class MyHandler(PatternMatchingEventHandler):
     """Capture created file in directory & process it."""
@@ -104,6 +57,90 @@ def watch_directory(directory=WATCH_ME):
     observer.join()
 
 
+#--------------------Processing-----------------
+
+def build_command(program: str, cname: str, ftype: str, fname: str, watch_dir: str) -> list[str]:
+    """Contruct the progam call with associated arguments."""
+    # cmd = f'python ./src/{program}.py -n {cname} -t {ftype} -f "{fname}" -p "{watch_dir}"'
+    cmd = [
+        "python",
+        f"./src/{program}.py",
+        "-n", cname,
+        "-t", ftype,
+        "-f", fname,
+        "-p", watch_dir,
+    ]
+    return cmd
+
+
+def handle_processed_file(fname: str, prob: bool, watch_dir: str) -> None:
+    """Delete the file if processed successfully (prob=False), or archive it one
+    directory above watch_dir if there was a problem (prob=True).
+    Missing files are silently ignored.
+    """
+    watch_path = Path(watch_dir)
+    src = watch_path / fname
+    with contextlib.suppress(FileNotFoundError):
+        if prob:
+            utils.logger.info('Archiving "%s" for analysis.', fname)
+            archive_dir = watch_path.parent / "archive"
+            archive_dir.mkdir(exist_ok=True)
+            src.rename(archive_dir / fname)
+        else:
+            utils.logger.info('Deleting "%s" to cleanup.', fname)
+            src.unlink()
+
+
+def log_dispatch_msg(fname: str, cname: str, ftype: str) -> None:
+    """Log what dispatcher is about to do."""
+    utils.logger.info('*' * 80)
+    utils.logger.info('Processing file "%s"', fname)
+    prep = 'an' if cname[0] in 'aeiou' else 'a'
+    utils.logger.info('IDed as %s "%s" file of type "%s"', prep, cname, ftype)
+
+
+def rename_file(old: str, new: str) -> bool:
+    """Rename file for easier processing."""
+    time.sleep(5)
+    try:
+        utils.logger.info('Renaming "%s" to "%s" in "%s"', old, new, WATCH_ME)
+        os.rename(f'{WATCH_ME}{old}', f'{WATCH_ME}{new}')
+        return True
+    except PermissionError:
+        utils.logger.info('Error renaming "%s" to "%s" in "%s"', old, new, WATCH_ME)
+        utils.logger.info('%s', sys.exc_info())
+        return False
+
+
+def select_program(cname: str, fname: str, ftype: str) -> str:
+    """Select which program to call based on filename."""
+    if cname == 'hlap':  # specialized hlap programs
+        return ('pdf_bill_indexing/hlap_pdf_idx'
+                if ftype == 'pdf' else 'transforms/hlap_cnvrt')
+    if 'dupes' in fname.lower():
+        return 'dupes_sorting/sort_multiples'
+    return 'transforms/transform_file'  # if not hlap or dupes then look for transform
+
+
+#-----------------------Dispatcher for auto processing--------------------
+def dispatch_file(filename: str):
+    """When new file added to watch directory, decide what to do with it."""
+    cname, fname, ftype, nname, _ = utils.parse_filename_new(filename)
+    log_dispatch_msg(fname, cname, ftype)
+    if fname == nname:
+        program = select_program(cname, fname, ftype)
+        command = build_command(program, cname, ftype, fname, WATCH_ME)
+        utils.logger.debug('Invoking: %s', ' '.join(command))
+        result = subprocess.run(command, check=False)
+        prob = result.returncode
+    else:
+        success = rename_file(fname, nname)
+        prob = not success
+
+    handle_processed_file(fname, prob, WATCH_ME)
+
+
+#-----------------Single file request for testing----------------
 def parse_user_input(desc='Dispatch files to be processed to the appropriate program.'):
     """
     Parse user input for optional directory to monitor or file to dispatched.
