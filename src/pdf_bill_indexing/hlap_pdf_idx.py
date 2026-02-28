@@ -18,38 +18,45 @@ from pdf_bill_indexing.hlap_idx_check import check_idx_file
 import app_modules.utilities as utils
 
 
-def create_index(new_abs_fn_prefix):
+def parse_pdf_page(page, raw_page_no, status):
+    """Update status based on a single PDF page.
+    Returns (acc_no, idx_no) or None if alignment page.
     """
-    Create index.
+    text = page.get_text()
+    if 'ALIGNMENT' in text:
+        status['align'] += 1
+        return None
+    lines = text.split('\n')
+    acc_no = lines[8]
+    idx_no = raw_page_no + status['align']
+    if status['first'] is None:
+        status['first'] = acc_no
+    status['last'] = acc_no
+    return acc_no, idx_no
 
-    With account number, start and end page number on each line.
-    """
+
+def create_index(new_abs_fn_prefix):
+    """Create index with account number, start page, and end page on each line."""
     tmp_file = f'{new_abs_fn_prefix}.tmp'
     spdfi_file = f'{new_abs_fn_prefix}.spdfi'
     pdf_file = f'{new_abs_fn_prefix}.pdf'
+
     utils.logger.info('Scaning %s.', pdf_file.rsplit('/', maxsplit=1)[-1])
 
+    pdf_doc = pdf_reader.open(pdf_file)
+    out_line = '{0:0>10},{sp},{ep}\n'
+    status = {'align': 0, 'first': None, 'last': None}
     with open(tmp_file, 'w', encoding='utf8') as idxf:
-        pdf_doc = pdf_reader.open(pdf_file)
-        out_line = '{0:0>10},{sp},{ep}\n'
-        page_no = align_no = first_acc = 0
-        for page_no, page in enumerate(pdf_doc):
-            text = page.get_text()
-            if 'ALIGNMENT' in text:
-                # bump page count for alignment test page & skip outlup
-                align_no += 1
-            else:
-                # output index info to file
-                lines = text.split('\n')
-                idx_no = page_no + 1 + align_no
-                acc_no = lines[8]
-                first_acc = first_acc or acc_no
-                idxf.write(out_line.format(acc_no, sp=idx_no, ep=idx_no))
-        page_no = page_no + 1
-    idx_file = Path(spdfi_file)
-    Path(tmp_file).replace(idx_file)
-    utils.logger.info('Created index file %s', idx_file.name)
-    checkout_idx(spdfi_file, page_no, first_acc, acc_no)
+        for raw_page_no, page in enumerate(pdf_doc, start=1):
+            result = parse_pdf_page(page, raw_page_no, status)
+            if result is None:
+                continue
+            acc_no, idx_no = result
+            idxf.write(out_line.format(acc_no, sp=idx_no, ep=idx_no))
+    idx_path = Path(spdfi_file)
+    Path(tmp_file).replace(idx_path)
+    utils.logger.info('Created index file %s', idx_path.name)
+    checkout_idx(spdfi_file, len(pdf_doc), status['first'], status['last'])
 
 
 def checkout_idx(spdfi_file, page_no, first_acc, acc_no):
