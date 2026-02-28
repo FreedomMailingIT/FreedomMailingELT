@@ -8,6 +8,7 @@ Switched to PyMuPDF (import as fitz) because os independent Python package
 that is ~20 faster that PyPDF4.
 """
 
+from dataclasses import dataclass
 import subprocess
 import sys
 from pathlib import Path
@@ -18,45 +19,62 @@ from pdf_bill_indexing.hlap_idx_check import check_idx_file
 import app_modules.utilities as utils
 
 
+@dataclass
+class Status:
+    """Track number of alignment images, first & last accounts."""
+    align: int = 0
+    first: int | None = None
+    last: int | None = None
+
+
+@dataclass
+class Filenames:
+    """Filenames used during the index process."""
+    tmp: str
+    spdfi: str
+    pdf: str
+
+
 def parse_pdf_page(page, raw_page_no, status):
     """Update status based on a single PDF page.
     Returns (acc_no, idx_no) or None if alignment page.
     """
     text = page.get_text()
     if 'ALIGNMENT' in text:
-        status['align'] += 1
+        status.align += 1
         return None
     lines = text.split('\n')
     acc_no = lines[8]
-    idx_no = raw_page_no + status['align']
-    if status['first'] is None:
-        status['first'] = acc_no
-    status['last'] = acc_no
+    idx_no = raw_page_no + status.align
+    if status.first is None:
+        status.first = acc_no
+    status.last = acc_no
     return acc_no, idx_no
 
 
 def create_index(new_abs_fn_prefix):
     """Create index with account number, start page, and end page on each line."""
-    tmp_file = f'{new_abs_fn_prefix}.tmp'
-    spdfi_file = f'{new_abs_fn_prefix}.spdfi'
-    pdf_file = f'{new_abs_fn_prefix}.pdf'
+    filenames = Filenames(
+        f'{new_abs_fn_prefix}.tmp',
+        f'{new_abs_fn_prefix}.spdfi',
+        f'{new_abs_fn_prefix}.pdf')
 
-    utils.logger.info('Scaning %s.', pdf_file.rsplit('/', maxsplit=1)[-1])
+    utils.logger.info('Scaning %s.', filenames.pdf.rsplit('/', maxsplit=1)[-1])
 
-    pdf_doc = pdf_reader.open(pdf_file)
+    pdf_doc = pdf_reader.open(filenames.pdf)
     out_line = '{0:0>10},{sp},{ep}\n'
-    status = {'align': 0, 'first': None, 'last': None}
-    with open(tmp_file, 'w', encoding='utf8') as idxf:
+    status = Status(0, None, None)
+    with open(filenames.tmp, 'w', encoding='utf8') as idxf:
         for raw_page_no, page in enumerate(pdf_doc, start=1):
             result = parse_pdf_page(page, raw_page_no, status)
             if result is None:
                 continue
             acc_no, idx_no = result
             idxf.write(out_line.format(acc_no, sp=idx_no, ep=idx_no))
-    idx_path = Path(spdfi_file)
-    Path(tmp_file).replace(idx_path)
+    idx_path = Path(filenames.spdfi)
+    Path(filenames.tmp).replace(idx_path)
     utils.logger.info('Created index file %s', idx_path.name)
-    checkout_idx(spdfi_file, len(pdf_doc), status['first'], status['last'])
+    checkout_idx(filenames.spdfi, len(pdf_doc), status.first, status.last)
 
 
 def checkout_idx(spdfi_file, page_no, first_acc, acc_no):
