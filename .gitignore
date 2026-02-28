@@ -11,5 +11,6 @@ wheels/
 
 # Testing debug files
 tests/data/.job_execution.log
+tests/data/archive/hlap_files.zip
 tests/data/archive/sorted_files.zip
 tests/data/archive/transformed_files.zip
