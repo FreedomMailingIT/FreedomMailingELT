@@ -44,7 +44,6 @@ def test_sorting(fname, msg, line, subtests):
             ['py', 'src/dupes_sorting/sort_multiples.py', '-f', str(TEST_DATA / fname)],
             check=False
         )
-
     _, seg_lines = utils.trim_log_seg(utils.get_last_log_segment())
     with subtests.test():
         assert msg in seg_lines[-line]

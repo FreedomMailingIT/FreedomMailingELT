@@ -7,6 +7,7 @@ sorted records to renamed file.
 
 import csv
 import datetime
+from dataclasses import dataclass
 import operator
 import os
 import sys
@@ -17,6 +18,15 @@ import app_modules.utilities as utils
 REGISTERS = {}
 INC = 10000
 LIMIT = 1.0
+
+
+@dataclass
+class Tracker:
+    """Track sorting numbers."""
+    prev_key: int
+    record_no: int
+    first_banner: int
+    line_no: int
 
 
 def check_due_date(due_date, filename):
@@ -179,19 +189,18 @@ def sort_and_output(groups, filename, due_date_col, delim, blank_lines):
             outfile, delimiter=delim,
             quoting={',': csv.QUOTE_ALL, '\t': csv.QUOTE_MINIMAL}[delim],
             lineterminator='\n')
-        prev_key = 2 * INC
-        record_no = first_banner = line_no = 0
+        tracker = Tracker(2*INC, 0, 0, 0)
         due_date = None
-        for i in sorted(groups.keys()):
-            record_no += 1
-            if i > prev_key:
-                first_banner, prev_key = new_section(
-                    out_file, record_no, i, prev_key, first_banner)
-            for line in groups[i]:
-                line_no, due_date = write_record(
-                    due_date_col, out_file, line, line_no)
+        for row in sorted(groups.keys()):
+            tracker.record_no += 1
+            if row > tracker.prev_key:
+                tracker.first_banner, tracker.prev_key = new_section(
+                    out_file, tracker.record_no, row, tracker.prev_key, tracker.first_banner)
+            for line in groups[row]:
+                tracker.line_no, due_date = write_record(
+                    due_date_col, out_file, line, tracker.line_no)
     print_success_msg(
-        (filename, due_date_col, due_date, first_banner, blank_lines, line_no, sorted_fn)
+        (filename, due_date_col, due_date, tracker.first_banner, blank_lines, tracker.line_no, sorted_fn)
         )
 
 
