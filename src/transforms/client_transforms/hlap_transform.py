@@ -1,6 +1,6 @@
 """Heber Light and Power account object defined."""
 
-import transforms.client_transforms.ancillaries.hlap_record_defs as record_defs
+import transforms.client_transforms.ancillaries.hlap_fields as record_defs
 from app_modules.freedom_utils import DotDict
 
 
