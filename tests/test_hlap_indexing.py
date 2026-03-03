@@ -36,7 +36,7 @@ def test_cleanup():
             files=old_files,
             path_to_archive=utils.FILE_PATH,
             path_to_files=str(TEST_DATA) + '/',
-            arch_name='hlap_data'
+            arch_name='hlap_files'
         )
 
 
