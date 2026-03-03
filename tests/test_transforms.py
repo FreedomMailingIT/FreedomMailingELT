@@ -50,12 +50,12 @@ def test_transform(fname, subtests):
     - Validate conversion, CSV creation, non-empty output, and compression
     """
     with subtests.test(msg=f'{fname} failed to execute!'):
-        src = TEST_DATA / "transform_data" / fname
+        src = TEST_DATA / 'transform_data' / fname
         dst = TEST_DATA / fname
         copyfile(src, dst)
 
         result = subprocess.run(
-            ["py", "src/transforms/transform_file.py", "-f", fname],
+            ['py', 'src/transforms/transform_file.py', '-f', fname],
             capture_output=True,
             text=True,
             check=True,
@@ -106,5 +106,5 @@ def test_cleanup():
 
 
 if __name__ == '__main__':
-    subprocess.run(["py", "src/transforms/transform_file.py", "-f", "waterford.zip"], check=True)
+    subprocess.run(['py', 'src/transforms/transform_file.py', '-f', 'waterford.zip'], check=True)
     test_cleanup()
