@@ -1,5 +1,5 @@
 """
-Transfor Lake Point form type CSV file to single records CSV.
+Transfor Lake Point from multi line account CSV file to single line TSV.
 
 Receives csv file handle (for transformed data) and source text to transform
 """
