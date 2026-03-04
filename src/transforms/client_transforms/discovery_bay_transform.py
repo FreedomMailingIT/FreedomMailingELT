@@ -10,6 +10,13 @@ import transforms.client_transforms.tyler_tech_xml as ttx
 import transforms.client_transforms.ancillaries.discovery_bay_fields as dbf
 
 
+def add_global_messages(bill, source):
+    """Add maximum of four BillComments from XML file to all records."""
+    for idx in range(min(4, len(source.comments))):
+        bill[f'message{idx + 1}'] = source.comments[idx]
+    return bill
+
+
 def blank_unneeded_usages(bill):
     """Blank usage for services that do not require them."""
     try:
@@ -38,12 +45,54 @@ def calc_period_days(bill, start_date, end_date):
     return bill
 
 
+def correct_meter_types(bill):
+    """Erase meter type value if not metered service.
+
+    (no meter_id for service).
+    """
+    for idx in range(1, 11):
+        meter_type = f'meter{idx}'
+        if bill.get(meter_type, False) and not bill.get(f'meter_id{idx}'):
+            bill[meter_type] = ''
+    return bill
+
+
 def format_currency(bill, name, value):
     """Format extracted data into suitable currency field."""
     value = value.replace('-', 'CR').lstrip('0')
     value = ('0.00' if value == '.00'
              else (f'0{value}' if value[0] == '.' else value))
     bill[name] = value
+
+
+def format_data(bill):
+    """Format extracted XML data for output."""
+    new_bill = bill
+    return new_bill
+
+
+def post_processing(bill):
+    """Calculate and record Past Due amount."""
+    bill = (build_consumption_history(bill)
+            if bill.get(ttx.CONS_KEY, False)
+            else bill)
+    bill = (set_direct_pay(bill, dbf.direct_pay)
+            if dbf.DIR_PAY_MSG and bill.get('directpay', False) == 'Y'
+            else bill)
+    bill = set_contract_pay(bill) if bill.get('contrctamt', False) else bill
+    bill = blank_unneeded_usages(bill)
+    new_bill = calc_period_days(bill, bill.get('curbegdate'), bill.get('curenddate'))
+    new_bill = {k: v for (k, v) in bill.items() if not k.endswith('?')}
+    new_bill |= dbf.bill_literals
+    new_bill['baraccnum'] = new_bill['accnumber'].replace('-', '')
+    for name, value in bill.items():
+        if name in dbf.currency_fields:
+            format_currency(new_bill, name, value)
+        elif isinstance(value, list):
+            unpack_list_values(new_bill, name, value)
+        else:
+            strip_leading_zeros(name, value, dbf.currency_fields)
+    return new_bill
 
 
 def set_contract_pay(bill):
@@ -81,56 +130,6 @@ def unpack_list_values(bill, name, values):
             else item.lstrip('0')
             )
     return bill
-
-
-##########
-def add_global_messages(bill, source):
-    """Add maximum of four BillComments from XML file to all records."""
-    for idx in range(min(4, len(source.comments))):
-        bill[f'message{idx + 1}'] = source.comments[idx]
-    return bill
-
-
-def correct_meter_types(bill):
-    """Erase meter type value if not metered service.
-
-    (no meter_id for service).
-    """
-    for idx in range(1, 11):
-        meter_type = f'meter{idx}'
-        if bill.get(meter_type, False) and not bill.get(f'meter_id{idx}'):
-            bill[meter_type] = ''
-    return bill
-
-
-def format_data(bill):
-    """Format extracted XML data for output."""
-    new_bill = bill
-    return new_bill
-
-
-def post_processing(bill):
-    """Calculate and record Past Due amount."""
-    bill = (build_consumption_history(bill)
-            if bill.get(ttx.CONS_KEY, False)
-            else bill)
-    bill = (set_direct_pay(bill, dbf.direct_pay)
-            if dbf.DIR_PAY_MSG and bill.get('directpay', False) == 'Y'
-            else bill)
-    bill = set_contract_pay(bill) if bill.get('contrctamt', False) else bill
-    bill = blank_unneeded_usages(bill)
-    new_bill = calc_period_days(bill, bill.get('curbegdate'), bill.get('curenddate'))
-    new_bill = {k: v for (k, v) in bill.items() if not k.endswith('?')}
-    new_bill |= dbf.bill_literals
-    new_bill['baraccnum'] = new_bill['accnumber'].replace('-', '')
-    for name, value in bill.items():
-        if name in dbf.currency_fields:
-            format_currency(new_bill, name, value)
-        elif isinstance(value, list):
-            unpack_list_values(new_bill, name, value)
-        else:
-            strip_leading_zeros(name, value, dbf.currency_fields)
-    return new_bill
 
 
 ############## main function ################

@@ -8,18 +8,25 @@ from transforms.client_transforms import tyler_tech_xml as ttx
 from transforms.client_transforms.ancillaries import roosevelt_fields as rf
 
 
+def _fix_neg(amount):
+    return '-' + amount[:-1] if amount.endswith('-') else amount
+
+
+def _format_currency(value):
+    """Format extracted data into suitable currency field."""
+    value = str(value)
+    value = value[1:] + '-' if value.startswith('-') else value
+    value = value.replace('-', 'CR').lstrip('0')
+    value = ('0.00' if value == '.00'
+             else (f'0{value}' if value[0] == '.' else value))
+    return value
+
+
 def add_global_messages(bill, source):
     """Add maximum of four BillComments from XML file to all records."""
     for idx in range(min(4, len(source.comments))):
         bill[f'message{idx + 1}'] = source.comments[idx]
     return bill
-
-
-def extract_notice(notice):
-    """Extract late pay file data."""
-    for name, value in notice.items():
-        notice[name] = strip_leading_zeros(name, value)
-    return notice
 
 
 def build_consumption_history(bill):
@@ -43,22 +50,19 @@ def correct_meter_types(bill):
     return bill
 
 
+def extract_notice(notice):
+    """Extract late pay file data."""
+    for name, value in notice.items():
+        notice[name] = strip_leading_zeros(name, value)
+    return notice
+
+
 def format_currency(bill, name, value):
     """Format extracted data into suitable currency field."""
     value = value.replace('-', 'CR').lstrip('0')
     value = ('0.00' if value == '.00'
              else (f'0{value}' if value[0] == '.' else value))
     bill[name] = value
-
-
-def _format_currency(value):
-    """Format extracted data into suitable currency field."""
-    value = str(value)
-    value = value[1:] + '-' if value.startswith('-') else value
-    value = value.replace('-', 'CR').lstrip('0')
-    value = ('0.00' if value == '.00'
-             else (f'0{value}' if value[0] == '.' else value))
-    return value
 
 
 def format_data(bill):
@@ -81,10 +85,6 @@ def format_data(bill):
         else:
             strip_leading_zeros(name, value)
     return new_bill
-
-
-def _fix_neg(amount):
-    return '-' + amount[:-1] if amount.endswith('-') else amount
 
 
 def post_processing(bill):
