@@ -13,17 +13,18 @@ import subprocess
 
 import pytest
 
-import app_modules.utilities as utils
 import app_modules.file_locations as loctns
+import app_modules.file_compare as fc
+import app_modules.utilities as utils
 
 # Prepare for testing
 TEST_DATA = Path(loctns.TEST_DATA)
 utils.initialize_log_file(path=utils.FILE_PATH)
 
 transforms = [
-    'Charlevoix csv_EOR.zip',
-    'Charlevoix tsv_EOR.zip',
-    'Charlevoix fixed_length.zip',
+    'charlevoix csv_eor.zip',
+    'charlevoix tsv_eor.zip',
+    'charlevoix fixed_length.zip',
     'draper non water.zip',
     'draper water.zip',
     'eagle_mtn.zip',
@@ -93,7 +94,6 @@ def test_cleanup():
             path_to_files=str(TEST_DATA) + '/',
             arch_name='transformed_files'
         )
-
     # remove copied source files
     deletions = []
     for file in transforms:
@@ -101,8 +101,17 @@ def test_cleanup():
         if path.exists():
             path.unlink()
             deletions.append(file)
-
     utils.logger.info('Deleted test files: %s', deletions)
+
+
+def test_file_compares():
+    """Do file compares AFTER the have been archived"""
+    archive_zip = Path(TEST_DATA) / 'archive' /  'transformed_files.zip'
+    compare_zip = Path(TEST_DATA) / 'compares' / 'transformed_files.zip'
+    for file in [x for x in TEST_DATA.iterdir() if x.name in transforms]:
+        utils.logger.info('Comparing created "%s" with stored file', file.name)
+        assert fc.NestedZipPath(archive_zip, file.name, file.name.replace('.zip','.csv')) == \
+               fc.NestedZipPath(compare_zip, file.name, file.name.replace('.zip','.csv'))
 
 
 if __name__ == '__main__':
