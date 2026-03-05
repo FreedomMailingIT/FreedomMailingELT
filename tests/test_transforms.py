@@ -94,7 +94,21 @@ def test_cleanup():
             path_to_files=str(TEST_DATA) + '/',
             arch_name='transformed_files'
         )
-    # remove copied source files
+
+
+def test_file_compares():
+    """Do file compares AFTER the have been archived"""
+    archive_zip = Path(TEST_DATA) / 'archive' /  'transformed_files.zip'
+    compare_zip = Path(TEST_DATA) / 'compares' / 'transformed_files.zip'
+    for file in [x for x in TEST_DATA.iterdir() if x.name.endswith('.zip')]:
+        file_name = 'fxd ' + file.name
+        utils.logger.info('Comparing created "%s" with stored file', file.name)
+        assert fc.NestedZipPath(archive_zip, file_name, file_name.replace('.zip','.csv')) == \
+               fc.NestedZipPath(compare_zip, file_name, file_name.replace('.zip','.csv'))
+
+
+def test_delete_workfiles():
+    """Remove copied source files"""
     deletions = []
     for file in transforms:
         path = TEST_DATA / file
@@ -102,16 +116,6 @@ def test_cleanup():
             path.unlink()
             deletions.append(file)
     utils.logger.info('Deleted test files: %s', deletions)
-
-
-def test_file_compares():
-    """Do file compares AFTER the have been archived"""
-    archive_zip = Path(TEST_DATA) / 'archive' /  'transformed_files.zip'
-    compare_zip = Path(TEST_DATA) / 'compares' / 'transformed_files.zip'
-    for file in [x for x in TEST_DATA.iterdir() if x.name in transforms]:
-        utils.logger.info('Comparing created "%s" with stored file', file.name)
-        assert fc.NestedZipPath(archive_zip, file.name, file.name.replace('.zip','.csv')) == \
-               fc.NestedZipPath(compare_zip, file.name, file.name.replace('.zip','.csv'))
 
 
 if __name__ == '__main__':
