@@ -9,8 +9,9 @@ Need to:
 from pathlib import Path
 import subprocess
 import pytest
-import app_modules.utilities as utils
 import app_modules.file_locations as loctns
+import app_modules.nested_zip_read as nzr
+import app_modules.utilities as utils
 
 
 # Prepare for testing
@@ -60,6 +61,21 @@ def test_missing_data(fname, msg, line, subtests):
     _, seg_lines = utils.trim_log_seg(utils.get_last_log_segment())
     with subtests.test():
         assert msg in seg_lines[-line]
+
+
+def test_file_compares():
+    """
+    Do file compares AFTER conversions have been archived.
+
+    Handles multiple CSV files within inner zip (eg elko).
+    """
+    archive_zip = Path(loctns.TEST_DATA) / 'archive' /  'sorted_files.zip'
+    compare_zip = Path(loctns.TEST_DATA) / 'compares' / 'sorted_compares.zip'
+
+    utils.logger.info('Checking converted archived files match "compares" files.')
+    archived = nzr.nested_csv_dict(nzr.NestedZipArchive(archive_zip))
+    compares = nzr.nested_csv_dict(nzr.NestedZipArchive(compare_zip))
+    assert archived == compares  # dict equality true even with different key/val order
 
 
 def test_cleanup():
