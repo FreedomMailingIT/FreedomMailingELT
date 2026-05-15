@@ -14,11 +14,6 @@ direct_pay = {
     'message': '*Do not pay! Account Balance will be drawn from your bank on {draft_date}*.'  # noqa
     }
 
-contracts = {  # have to construct data because unique extract not possible
-    'code_field': 'Serv_code',
-    '1001': 'Connection Charge',
-    }
-
 bill_extract = {  # XML attribs to extract & associated CSV column
     'Bill_dt': 'billdate',
     'Due_dt': 'duedate',
@@ -49,11 +44,10 @@ bill_extract = {  # XML attribs to extract & associated CSV column
     'Cons_prd': 'Cons_prd',
     'S_des': 'meter?',
     'Drf_cst': 'directpay',
-    'Orig_amt': 'contrctamt',
-    'Curr_charge': 'contrctbil',
+    'Curr_charge': 'contrctamt',
     'arrear': 'past_due_amt',
 
-    # feilds below only used for decision making and not stored in CSV
+    # fields below only used for decision making and not stored in CSV
     'Drft_dt': 'Drft_dt',
     'Serv_code': 'Serv_code',
     }
