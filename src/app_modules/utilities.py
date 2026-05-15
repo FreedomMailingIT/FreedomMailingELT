@@ -31,7 +31,7 @@ LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 LEN_LETTERS = len(LETTERS)
 TRANSLATE = {
     'halp': 'hlap', 'hlp': 'hlap', 'eagle': 'eagle_mtn', 'usbxmlf': 'frederick',
-    'lake': 'lake_point', 'kemmer': 'kemmerer'
+    'lake': 'lake_point', 'kemmer': 'kemmerer', 'discovery': 'discovery_bay',
     }
 
 #file prefixes to ignore in watchme directory
