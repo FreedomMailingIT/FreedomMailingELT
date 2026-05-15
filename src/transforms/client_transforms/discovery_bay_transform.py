@@ -46,11 +46,19 @@ def calc_period_days(bill, start_date, end_date):
 
 
 def change_case_on_service_title(bill):
-    """Change service titles to lower case to match original bills"""
+    """Change service titles to lowercase to match original bills"""
     services = bill.get('service_?', None)
     if services:
         for idx, text in enumerate(services):
             services[idx] = text.title()
+    return bill
+
+
+def change_case_on_address(bill):
+    """Change address lines to uppercase to match original bills"""
+    address_fields = ['address', 'address2', 'city']
+    for field in address_fields:
+        bill[field] = bill[field].upper()
     return bill
 
 
@@ -92,6 +100,7 @@ def post_processing(bill):
     contract = bill.get('contrctamt', False)
     bill = set_contract_pay(bill) if contract else bill
     bill = change_case_on_service_title(bill)
+    bill = change_case_on_address(bill)
     new_bill = calc_period_days(bill, bill.get('curbegdate'), bill.get('curenddate'))
     new_bill = {k: v for (k, v) in bill.items() if not k.endswith('?')}
     new_bill |= dbf.bill_literals
