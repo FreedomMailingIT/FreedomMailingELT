@@ -45,6 +45,15 @@ def calc_period_days(bill, start_date, end_date):
     return bill
 
 
+def change_case_on_service_title(bill):
+    """Change service titles to lower case to match original bills"""
+    services = bill.get('service_?', None)
+    if services:
+        for idx, text in enumerate(services):
+            services[idx] = text.title()
+    return bill
+
+
 def correct_meter_types(bill):
     """Erase meter type value if not metered service.
 
@@ -82,6 +91,7 @@ def post_processing(bill):
     bill = blank_unneeded_usages(bill)
     contract = bill.get('contrctamt', False)
     bill = set_contract_pay(bill) if contract else bill
+    bill = change_case_on_service_title(bill)
     new_bill = calc_period_days(bill, bill.get('curbegdate'), bill.get('curenddate'))
     new_bill = {k: v for (k, v) in bill.items() if not k.endswith('?')}
     new_bill |= dbf.bill_literals

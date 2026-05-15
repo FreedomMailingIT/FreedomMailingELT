@@ -72,12 +72,12 @@ currency_fields = [
     ]
 
 bill_literals = {  # CSV columns that have fixed literal values
-    'prevbaltit': 'PREVIOUS BALANCE',
-    'curperpymt': 'PAYMENTS',
-    'adj_title': 'ADJUSTMENTS',
-    'penalty_title': 'PENALTIES',
-    'past_due_title': 'PAST DUE',
-    'payamttitl': 'PAY THIS AMOUNT',
+    'prevbaltit': 'Previous Balance',
+    'curperpymt': 'Payments',
+    'adj_title': 'Adjustments',
+    'penalty_title': 'Penalties',
+    'past_due_title': 'Past Due',
+    'payamttitl': 'Pay This Amount',
     'usagetitl1': '1',
     'usagetitl2': '2',
     'usagetitl3': '3',
