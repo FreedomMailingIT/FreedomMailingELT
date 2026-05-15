@@ -44,12 +44,12 @@ bill_extract = {  # XML attribs to extract & associated CSV column
     'Cons_prd': 'Cons_prd',
     'S_des': 'meter?',
     'Drf_cst': 'directpay',
+    'Desc': 'contrctbil_?',
     'Curr_charge': 'contrctamt_?',
     'arrear': 'past_due_amt',
 
     # fields below only used for decision making and not stored in CSV
     'Drft_dt': 'Drft_dt',
-    'Serv_code': 'Serv_code',
     }
 
 blank_usage_services = [

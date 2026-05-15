@@ -98,7 +98,7 @@ def post_processing(bill):
             else bill)
     bill = blank_unneeded_usages(bill)
     contract = bill.get('contrctamt_?', False)
-    bill = set_contract_pay(bill) if contract else bill
+    bill = add_contract_to_services(bill) if contract else bill
     bill = change_case_on_service_title(bill)
     bill = change_case_on_address(bill)
     new_bill = calc_period_days(bill, bill.get('curbegdate'), bill.get('curenddate'))
@@ -115,8 +115,8 @@ def post_processing(bill):
     return new_bill
 
 
-def set_contract_pay(bill):
-    """Set Contract Pay message (if ever needed)."""
+def add_contract_to_services(bill):
+    """Add Contract details to services."""
     if not bill.get('service_?', None):
         # no services so add empty lists to bill
         bill['service_?'] = []
@@ -124,7 +124,7 @@ def set_contract_pay(bill):
 
     for amount in bill['contrctamt_?']:
         # add contract charge as a normal service charge to list of services
-        bill['service_?'].append(bill['Serv_code'])
+        bill['service_?'].append(bill['contrctbil_?'][len(bill['service_?'])])
         bill['amount_?'].append(amount)
     return bill
 
