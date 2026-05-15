@@ -44,7 +44,7 @@ bill_extract = {  # XML attribs to extract & associated CSV column
     'Cons_prd': 'Cons_prd',
     'S_des': 'meter?',
     'Drf_cst': 'directpay',
-    'Curr_charge': 'contrctamt',
+    'Curr_charge': 'contrctamt_?',
     'arrear': 'past_due_amt',
 
     # fields below only used for decision making and not stored in CSV
@@ -63,7 +63,6 @@ currency_fields = [
     'adj_amt',
     'pen_amt',
     'acctbal',
-    'contrctbil',
     'contrctamt',
     'past_due_amt',
     # shut-off fields
