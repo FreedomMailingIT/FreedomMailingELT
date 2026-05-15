@@ -79,9 +79,9 @@ def post_processing(bill):
     bill = (set_direct_pay(bill, dbf.direct_pay)
             if dbf.DIR_PAY_MSG and bill.get('directpay', False) == 'Y'
             else bill)
+    bill = blank_unneeded_usages(bill)
     contract = bill.get('contrctamt', False)
     bill = set_contract_pay(bill) if contract else bill
-    bill = blank_unneeded_usages(bill)
     new_bill = calc_period_days(bill, bill.get('curbegdate'), bill.get('curenddate'))
     new_bill = {k: v for (k, v) in bill.items() if not k.endswith('?')}
     new_bill |= dbf.bill_literals
@@ -99,6 +99,14 @@ def post_processing(bill):
 def set_contract_pay(bill):
     """Set Contract Pay message (if ever needed)."""
     bill['contrctbil'] = bill['Serv_code']
+    format_currency(bill, 'contrctamt', bill['contrctamt'])
+    # add contract charge as a normal service charge to list of services
+    if not bill.get('service_?', None):
+        # no services so add empty lists to bill
+        bill['service_?'] = []
+        bill['amount_?'] = []
+    bill['service_?'].append(bill['contrctbil'])
+    bill['amount_?'].append(bill['contrctamt'])
     return bill
 
 
