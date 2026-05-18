@@ -77,10 +77,11 @@ if __name__ == '__main__':
     if FILE_TYPE == 'zip':
         # Extract compressed file and allow dispatcher to handle it
         with zipfile.ZipFile(f'{FILE_PATH}{FILE_NAME}') as zip_source:
-            zip_source.extractall()
-            utils.logger.info('Exracting %s', FILE_NAME)
-            utils.logger.info('Restart using extracted file.')
-            sys.exit(0)
+            for source_file in zip_source.namelist():
+                utils.logger.info('Exracting %s', FILE_NAME)
+                utils.logger.info('Using extracted file %s.', source_file)
+                FILE_NAME = source_file
+                NEW_FNAME = source_file
 
     IN_FILE_NAME = f'{FILE_PATH}{NEW_FNAME}'
     OUT_FILE_NAME = f'{FILE_PATH}{utils.TRANS_PREFIX}{NEW_FNAME}'

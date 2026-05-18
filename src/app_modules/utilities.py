@@ -35,7 +35,7 @@ TRANSLATE = {
     }
 
 #file prefixes to ignore in watchme directory
-IGNORE = ['sorted', 'fxd', '.~lock', '.log', 'B47001', 'Zone.Identifier', '_.pdf']
+IGNORE = ['sorted', 'fxd', '.~lock', '.log', 'B47001', 'Zone.Identifier', '_.pdf', 'zip.part']
 
 
 def archive_files(
