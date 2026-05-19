@@ -30,7 +30,6 @@ class Status:
 @dataclass
 class Filenames:
     """Filenames used during the index process."""
-    tmp: str
     spdfi: str
     pdf: str
 
@@ -55,25 +54,22 @@ def parse_pdf_page(page, raw_page_no, status):
 def create_index(new_abs_fn_prefix):
     """Create index with account number, start page, and end page on each line."""
     filenames = Filenames(
-        f'{new_abs_fn_prefix}.tmp',
         f'{new_abs_fn_prefix}.spdfi',
         f'{new_abs_fn_prefix}.pdf')
 
-    utils.logger.info('Scaning %s.', filenames.pdf.rsplit('/', maxsplit=1)[-1])
+    utils.logger.info('Scaning %s', filenames.pdf.rsplit('/', maxsplit=1)[-1])
 
     pdf_doc = pdf_reader.open(filenames.pdf)
     out_line = '{0:0>10},{sp},{ep}\n'
     status = Status(0, None, None)
-    with open(filenames.tmp, 'w', encoding='utf8') as idxf:
+    with open(filenames.spdfi, 'w', encoding='utf8') as idxf:
         for raw_page_no, page in enumerate(pdf_doc, start=1):
             result = parse_pdf_page(page, raw_page_no, status)
             if result is None:
                 continue
             acc_no, idx_no = result
             idxf.write(out_line.format(acc_no, sp=idx_no, ep=idx_no))
-    idx_path = Path(filenames.spdfi)
-    Path(filenames.tmp).replace(idx_path)
-    utils.logger.info('Created index file %s', idx_path.name)
+    utils.logger.info('Created index file %s', filenames.spdfi.split('/')[-1])
     checkout_idx(filenames.spdfi, len(pdf_doc), status.first, status.last)
 
 
@@ -93,11 +89,11 @@ def put_files_to_sftp(fn_prefix):
     """Copy required files to SFTP server."""
     cmd = [
         'sshpass', '-p', c.pswd,
-        'scp', fn_prefix+'*',
+        'scp', str(fn_prefix.resolve())+'*',
         c.user+'@'+c.host+':~'
     ]
-    err = subprocess.run(cmd, check=False)
-    if err:
+    err = subprocess.run(' '.join(cmd), shell=True, check=False)
+    if err.returncode:
         utils.logger.info('Problems coping B47001* files to SFTP server.')
     else:
         utils.logger.info('Copied B47001* files to SFTP server.', )
@@ -129,10 +125,11 @@ def main(input_fp, input_fn=None):
 
 
 if __name__ == '__main__':
+    # put_files_to_sftp(sys.argv[1]); sys.exit(0)
+
     CITY_NAME, FILE_NAME, FILE_TYPE, NEW_FNAME, FILE_PATH = utils.parse_user_input()
     # must have source filename, fsmonitor usually supplies this
     if FILE_NAME:
         main(FILE_PATH, NEW_FNAME)
-        # put_files_to_sftp(FILE_NAME)
     else:
         sys.exit(1)
