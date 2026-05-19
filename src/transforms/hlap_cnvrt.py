@@ -9,7 +9,6 @@ statements see hlp_pdf_idx).  Both options used each job run.
 
 import csv
 import os
-import sys
 import zipfile
 from src.transforms.client_transforms.hlap_transform import Account
 import src.app_modules.utilities as utils
@@ -75,7 +74,7 @@ if __name__ == '__main__':
     # print(f'{CITY_NAME=}, {FILE_NAME=}, {FILE_TYPE=}, {NEW_FNAME=}, {FILE_PATH=}'); exit()
 
     if FILE_TYPE == 'zip':
-        # Extract compressed file and allow dispatcher to handle it
+        # Extract compressed file and process extracted file(s)
         with zipfile.ZipFile(f'{FILE_PATH}{FILE_NAME}') as zip_source:
             for source_file in zip_source.namelist():
                 utils.logger.info('Exracting %s', FILE_NAME)
