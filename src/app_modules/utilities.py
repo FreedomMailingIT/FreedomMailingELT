@@ -34,7 +34,7 @@ TRANSLATE = {
     'lake': 'lake_point', 'kemmer': 'kemmerer', 'discovery': 'discovery_bay',
     }
 
-#file prefixes to ignore in watchme directory
+#file patterns to ignore in watchme directory
 IGNORE = ['sorted', 'fxd', '.~lock', '.log', 'B47001', 'Zone.Identifier', '_.pdf', 'zip.part']
 
 
