@@ -21,6 +21,7 @@ from pathlib import Path
 import subprocess
 import sys
 import time
+import traceback
 
 from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
@@ -131,7 +132,11 @@ def dispatch_file(filename: str):
         program = select_program(cname, fname, ftype)
         command = build_command(program, cname, ftype, fname, WATCH_ME)
         utils.logger.debug('Invoking: %s', ' '.join(command))
-        result = subprocess.run(command, check=False)
+        try:
+            result = subprocess.run(command, check=False)
+        except Exception as msg:
+            utils.logger.info('Execution error: %s', msg)
+            utils.logger.info('%s', traceback.print_exc())
         prob = result.returncode
     else:
         success = rename_file(fname, nname)
