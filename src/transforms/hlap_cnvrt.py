@@ -77,7 +77,7 @@ if __name__ == '__main__':
         # Extract compressed file and process extracted file(s)
         with zipfile.ZipFile(f'{FILE_PATH}{FILE_NAME}') as zip_source:
             for source_file in zip_source.namelist():
-                utils.logger.info('Exracting "%s" into "%s"', FILE_NAME, FILE_PATH)
+                utils.logger.info('Exracting "%s" into "%s"', source_file, FILE_PATH)
                 zip_source.extract(source_file, FILE_PATH)
                 utils.logger.info('Using extracted file "%s".', source_file)
                 FILE_NAME = source_file
